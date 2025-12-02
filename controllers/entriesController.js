@@ -52,9 +52,16 @@ exports.getEntry = async (req, res) => {
 // @route   POST /api/entries
 // @desc    create new entry
 // @access  Private
-exports.createNewEntry = async (res, req) => {
+exports.createNewEntry = async (req, res) => {
+  console.log("createEntry called");
+  console.log("res type:", typeof res);
+  console.log("res.status type:", typeof res.status);
   try {
-    const { title, content, date } = req.body;
+    console.log("Headers:", req.headers);
+    console.log("Body:", req.body);
+    console.log("User:", req.user);
+
+    const { title, content, date } = req.body || {};
 
     if (!content) {
       return res.status(400).json({ error: "Content is required." });
