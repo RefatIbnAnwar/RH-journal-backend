@@ -39,6 +39,7 @@ exports.login = async (req, res) => {
 
   if (!email || !password) {
     throw badRequest("Please provide email and password");
+    // test
   }
 
   const user = await User.findOne({ email }).select("+password");
