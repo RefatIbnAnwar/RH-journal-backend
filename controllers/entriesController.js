@@ -1,150 +1,96 @@
-const { json } = require("express");
 const JournalEntry = require("../models/JournalEntry");
+const { notFound, badRequest, unauthorized } = require("../errors/AppError");
 
-// @route   Get /api/entries
-// @desc    Get all entries for logged-in user
-// @access  Private
 exports.getEntries = async (req, res) => {
-  try {
-    const entries = await JournalEntry.find({ user: req.user.id }).sort({
-      data: -1,
-    });
+  const entries = await JournalEntry.find({ user: req.user.id }).sort({
+    date: -1,
+  });
 
-    res.status(200).json({
-      success: true,
-      count: entries.length,
-      entries,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
-  }
+  res.status(200).json({
+    success: true,
+    count: entries.length,
+    entries,
+  });
 };
-
-// @route GET /api/entries/:id
-// @desc Get single entry by id
-// @access private
 
 exports.getEntry = async (req, res) => {
-  try {
-    const entry = await JournalEntry.findById(req.params.id);
+  const entry = await JournalEntry.findById(req.params.id);
 
-    if (!entry) {
-      return res.status(404).json({ error: "Entry not found" });
-    }
-
-    if (entry.user.toString() !== req.user.id) {
-      return res
-        .status(401)
-        .json({ error: "Not Authorised to view this entry." });
-    }
-
-    res.status(200).json({
-      success: true,
-      entry,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+  if (!entry) {
+    throw notFound("Entry");
   }
+
+  if (entry.user.toString() !== req.user.id) {
+    throw unauthorized("Not authorized to view this entry");
+  }
+
+  res.status(200).json({
+    success: true,
+    entry,
+  });
 };
 
-// @route   POST /api/entries
-// @desc    create new entry
-// @access  Private
 exports.createNewEntry = async (req, res) => {
-  console.log("createEntry called");
-  console.log("res type:", typeof res);
-  console.log("res.status type:", typeof res.status);
-  try {
-    console.log("Headers:", req.headers);
-    console.log("Body:", req.body);
-    console.log("User:", req.user);
+  const { title, content, date } = req.body || {};
 
-    const { title, content, date } = req.body || {};
-
-    if (!content) {
-      return res.status(400).json({ error: "Content is required." });
-    }
-
-    const entry = await JournalEntry.create({
-      user: req.user.id,
-      title: title || "Untitled",
-      content,
-      date: date ? new Date(date) : new Date(),
-    });
-
-    res.status(201).json({
-      success: true,
-      entry,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+  if (!content) {
+    throw badRequest("Content is required");
   }
+
+  const entry = await JournalEntry.create({
+    user: req.user.id,
+    title: title || "Untitled",
+    content,
+    date: date ? new Date(date) : new Date(),
+  });
+
+  res.status(201).json({
+    success: true,
+    entry,
+  });
 };
 
-// @route   PUT /api/entries/:id
-// @desc    Update entry
-// @access  Private
 exports.updateEntry = async (req, res) => {
-  try {
-    let entry = await JournalEntry.findById(req.params.id);
+  let entry = await JournalEntry.findById(req.params.id);
 
-    if (!entry) {
-      return res.status(404).json({ error: "Entry not found." });
-    }
-
-    if (entry.user.toString() !== req.user.id) {
-      return res
-        .status(401)
-        .json({ error: "Not Authorise to update this entry" });
-    }
-
-    const { title, content, date } = req.body;
-
-    if (title) entry.title = title;
-    if (content) entry.content = content;
-    if (date) entry.date = new Date(date);
-    entry.updatedAt = new Date();
-
-    await entry.save();
-
-    res.status(200).json({
-      success: true,
-      entry,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500), json({ error: error.message });
+  if (!entry) {
+    throw notFound("Entry");
   }
+
+  if (entry.user.toString() !== req.user.id) {
+    throw unauthorized("Not authorized to update this entry");
+  }
+
+  const { title, content, date } = req.body;
+
+  if (title) entry.title = title;
+  if (content) entry.content = content;
+  if (date) entry.date = new Date(date);
+  entry.updatedAt = new Date();
+
+  await entry.save();
+
+  res.status(200).json({
+    success: true,
+    entry,
+  });
 };
 
-// @route   DELETE /api/entries/:id
-// @desc    Delete entry
-// @access  Private
 exports.deleteEntry = async (req, res) => {
-  try {
-    const entry = await JournalEntry.findById(req.params.id);
+  const entry = await JournalEntry.findById(req.params.id);
 
-    if (!entry) {
-      return res.status(404).json({ error: "Entry not found" });
-    }
-
-    if (entry.user.toString() !== req.user.id) {
-      return res
-        .status(401)
-        .json({ error: "Not authorized to delete this entry" });
-    }
-
-    await JournalEntry.findByIdAndDelete(req.params.id);
-
-    res.status(200).json({
-      success: true,
-      message: "Entry deleted",
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+  if (!entry) {
+    throw notFound("Entry");
   }
+
+  if (entry.user.toString() !== req.user.id) {
+    throw unauthorized("Not authorized to delete this entry");
+  }
+
+  await JournalEntry.findByIdAndDelete(req.params.id);
+
+  res.status(200).json({
+    success: true,
+    message: "Entry deleted",
+  });
 };

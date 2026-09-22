@@ -1,10 +1,10 @@
-// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const entriesRoutes = require("./routes/entries");
+const { notFoundHandler, errorHandler } = require("./middleware/errorHandler");
 
 dotenv.config();
 
@@ -14,11 +14,6 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
-
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.path}`);
-  next();
-});
 
 app.get("/", (req, res) => {
   res.json({ message: "Server is working" });
@@ -34,11 +29,9 @@ mongoose
 app.use("/api/auth", authRoutes);
 app.use("/api/entries", entriesRoutes);
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: "Internal server error" });
-});
+// Error handling (must be after all routes)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {

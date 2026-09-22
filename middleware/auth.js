@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const { unauthorized } = require("../errors/AppError");
 
 exports.protect = (req, res, next) => {
   let token;
@@ -11,18 +12,10 @@ exports.protect = (req, res, next) => {
   }
 
   if (!token) {
-    return res
-      .status(401)
-      .json({ error: "Not authorized to access this route" });
+    throw unauthorized("Not authorized to access this route");
   }
 
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (error) {
-    return res
-      .status(401)
-      .json({ error: "Not authorized to access this route" });
-  }
+  const decoded = jwt.verify(token, process.env.JWT_SECRET);
+  req.user = decoded;
+  next();
 };
