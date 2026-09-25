@@ -1,5 +1,4 @@
 const express = require("express");
-
 const { protect } = require("../middleware/auth");
 const {
   getEntries,
@@ -8,15 +7,21 @@ const {
   updateEntry,
   deleteEntry,
 } = require("../controllers/entriesController");
+const {
+  createEntryRules,
+  updateEntryRules,
+  entryIdRule,
+} = require("../validators/entries");
+const validate = require("../middleware/validate");
 
 const router = express.Router();
 
 router.use(protect);
 
 router.get("/", getEntries);
-router.get("/:id", getEntry);
-router.post("/", createNewEntry);
-router.put("/:id", updateEntry);
-router.delete("/:id", deleteEntry);
+router.get("/:id", entryIdRule, validate, getEntry);
+router.post("/", createEntryRules, validate, createNewEntry);
+router.put("/:id", updateEntryRules, validate, updateEntry);
+router.delete("/:id", entryIdRule, validate, deleteEntry);
 
 module.exports = router;

@@ -1,5 +1,5 @@
 const JournalEntry = require("../models/JournalEntry");
-const { notFound, badRequest, unauthorized } = require("../errors/AppError");
+const { notFound, unauthorized } = require("../errors/AppError");
 
 exports.getEntries = async (req, res) => {
   const entries = await JournalEntry.find({ user: req.user.id }).sort({
@@ -31,11 +31,7 @@ exports.getEntry = async (req, res) => {
 };
 
 exports.createNewEntry = async (req, res) => {
-  const { title, content, date } = req.body || {};
-
-  if (!content) {
-    throw badRequest("Content is required");
-  }
+  const { title, content, date } = req.body;
 
   const entry = await JournalEntry.create({
     user: req.user.id,

@@ -11,10 +11,6 @@ const generateToken = (id) => {
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
 
-  if (!name || !email || !password) {
-    throw badRequest("Please provide all required fields");
-  }
-
   const existing = await User.findOne({ email });
   if (existing) {
     throw badRequest("Email already in use");
@@ -36,11 +32,6 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-
-  if (!email || !password) {
-    throw badRequest("Please provide email and password");
-    // test
-  }
 
   const user = await User.findOne({ email }).select("+password");
   if (!user) {
